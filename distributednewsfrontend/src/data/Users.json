@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "name": "Jonathan Ortega",
+        "username": "jonaortegamol",
+        "password": "pass123",
+        "subs": ["internacional, futbol"]
+    },
+    {
+        "id": 2,
+        "name": "Oscar Orellana",
+        "username": "oscarore",
+        "password": "pass123",
+        "subs": ["futbol"]
+    }
+]

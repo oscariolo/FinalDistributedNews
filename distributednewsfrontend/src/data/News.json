@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "title": "PSG a la final del mundial de clubes",
+        "desc": "El PSG demuestra al Real Madrid que es el actual campeon del mundo y gana el partido 4 a 0, el madrid tiene varios problemas que resolver en su plantilla.",
+        "type": "futbol"
+    },
+    {
+        "id": 2,
+        "title": "Trump acaba con la guerra de Iran",
+        "desc": "Despues del poderoso ataque armado del presidente de los Estados Unidos a Iran este contrataca pero la guerra cesa por unos instantes, se prevee que Iran esta planificando un nuevo ataque.",
+        "type": "internacional"
+    }
+]
