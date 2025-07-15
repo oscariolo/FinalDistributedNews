@@ -1,0 +1,20 @@
+# Usa una imagen base liviana
+FROM node:20
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copia dependencias
+COPY package*.json ./
+
+# Instala dependencias
+RUN npm install
+
+# Copia el resto de archivos
+COPY . .
+
+# Expone el puerto de desarrollo de Vite
+EXPOSE 3000
+
+# Ejecuta en modo desarrollo
+CMD ["npm", "run", "dev"]
