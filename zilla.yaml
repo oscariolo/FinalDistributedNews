@@ -37,7 +37,20 @@ bindings:
           - path: /api/news/news-general
         with:
           topic: news-general
-        exit: south_kafka_client
+        exit: north_kafka_cache_client
+
+  # Kafka sync layer
+  north_kafka_cache_client:
+    type: kafka
+    kind: cache_client
+    exit: south_kafka_cache_server
+  south_kafka_cache_server:
+    type: kafka
+    kind: cache_server
+    options:
+      bootstrap:
+        - news-general
+    exit: south_kafka_client
 
   # Connect to Kafka
   south_kafka_client:
