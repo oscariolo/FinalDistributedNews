@@ -1,0 +1,57 @@
+name: SSE-ZILLA
+bindings:
+  # Proxy service entrypoint
+  north_tcp_server:
+    type: tcp
+    kind: server
+    options:
+      host: 0.0.0.0
+      port: 7114
+    exit: north_http_server
+  north_http_server:
+    type: http
+    kind: server
+    options:
+      access-control:
+        policy: cross-origin
+    routes:
+      - when:
+          - headers:
+              :scheme: http
+              :authority: localhost:7114
+              :path: /api/news/news-general
+        exit: north_sse_server
+
+  # SSE Server With an exit to Kafka
+  north_sse_server:
+    type: sse
+    kind: server
+    exit: north_sse_kafka_mapping
+
+  # SSE to Kafka mapping  
+  north_sse_kafka_mapping:
+    type: sse-kafka
+    kind: proxy
+    routes:
+      - when:
+          - path: /api/news/news-general
+        with:
+          topic: news-general
+        exit: south_kafka_client
+
+  # Connect to Kafka
+  south_kafka_client:
+    type: kafka
+    kind: client
+    options:
+      servers:
+        - ${{env.KAFKA_BOOTSTRAP_SERVER}}
+    exit: south_kafka_tcp_client
+  south_kafka_tcp_client:
+    type: tcp
+    kind: client
+
+telemetry:
+  exporters:
+    stdout_logs_exporter:
+      type: stdout

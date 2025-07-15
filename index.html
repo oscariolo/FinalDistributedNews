@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed News - SSE Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .controls input, .controls button, .controls select {
+            margin: 5px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .controls button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .controls button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .news-feed {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+        .news-item {
+            background: white;
+            margin: 10px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .news-item .timestamp {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .news-item .title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .news-item .content {
+            color: #555;
+        }
+        .publish-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 5px;
+        }
+        .publish-section textarea {
+            width: 100%;
+            height: 100px;
+            margin: 5px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .clear-button {
+            background: #dc3545 !important;
+        }
+        .clear-button:hover {
+            background: #c82333 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗞️ Distributed News - Real-time Feed</h1>
+        
+        <!-- Connection Controls -->
+        <div class="controls">
+            <label for="topic">Topic:</label>
+            <select id="topic">
+                <option value="news-general">General News</option>
+                <option value="news-tech">Tech News</option>
+                <option value="news-sports">Sports News</option>
+                <option value="news-politics">Politics News</option>
+            </select>
+            
+            <button id="connectBtn" onclick="connectSSE()">Connect to SSE</button>
+            <button id="disconnectBtn" onclick="disconnectSSE()" disabled>Disconnect</button>
+            <button id="clearBtn" onclick="clearFeed()" class="clear-button">Clear Feed</button>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="status" class="status disconnected">Disconnected</div>
+
+        <!-- Publish News Section -->
+        <div class="publish-section">
+            <h3>📝 Publish News</h3>
+            <input type="text" id="newsTitle" placeholder="News Title" style="width: 100%; margin: 5px 0;">
+            <textarea id="newsContent" placeholder="News Content"></textarea>
+            <button onclick="publishNews()">Publish News</button>
+        </div>
+
+        <!-- News Feed -->
+        <div class="news-feed" id="newsFeed">
+            <div style="text-align: center; color: #666; margin-top: 50px;">
+                Connect to SSE to start receiving real-time news updates...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        let currentTopic = 'news-general';
+
+        function updateStatus(message, className) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${className}`;
+        }
+
+        function addNewsItem(data) {
+            const feed = document.getElementById('newsFeed');
+            const newsItem = document.createElement('div');
+            newsItem.className = 'news-item';
+            
+            let newsData;
+            try {
+                newsData = typeof data === 'string' ? JSON.parse(data) : data;
+            } catch (e) {
+                newsData = { title: 'Raw Message', content: data };
+            }
+
+            newsItem.innerHTML = `
+                <div class="timestamp">${new Date().toLocaleString()}</div>
+                <div class="title">${newsData.title || 'News Update'}</div>
+                <div class="content">${newsData.content || newsData}</div>
+            `;
+            
+            feed.insertBefore(newsItem, feed.firstChild);
+            
+            // Remove old items if too many
+            while (feed.children.length > 50) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        function connectSSE() {
+            currentTopic = document.getElementById('topic').value;
+            
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            updateStatus('Connecting...', 'connecting');
+            
+            // Connect to Zilla SSE endpoint
+            const url = `http://localhost:7114/api/news/${currentTopic}`;
+            console.log("connecting to:", url);
+            console.log("SSE URL:", url);
+            eventSource = new EventSource(url);
+
+            // Add readyState debugging
+            setInterval(() => {
+                if (eventSource) {
+                    console.log("SSE ReadyState:", eventSource.readyState, 
+                        eventSource.readyState === 0 ? "CONNECTING" : 
+                        eventSource.readyState === 1 ? "OPEN" : "CLOSED");
+                }
+            }, 1000);
+
+            eventSource.onopen = function() {
+                console.log("SSE Connection opened");
+                updateStatus(`Connected to ${currentTopic}`, 'connected');
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                addNewsItem({ 
+                    title: 'Connection Established', 
+                    content: `Successfully connected to ${currentTopic} topic via SSE` 
+                });
+            };
+
+            eventSource.onmessage = function(event) {
+                console.log('SSE Message received:', event);
+                console.log('SSE Message data:', event.data);
+                addNewsItem(event.data);
+            };
+
+            eventSource.onerror = function(event) {
+                console.error('SSE Error:', event);
+                console.log('SSE ReadyState on error:', eventSource.readyState);
+                updateStatus('Connection Error', 'disconnected');
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+                addNewsItem({ 
+                    title: 'Connection Error', 
+                    content: `Failed to connect to SSE endpoint. ReadyState: ${eventSource.readyState}. Check if Zilla is running.` 
+                });
+            };
+        }
+
+        function disconnectSSE() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            updateStatus('Disconnected', 'disconnected');
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('disconnectBtn').disabled = true;
+            addNewsItem({ 
+                title: 'Disconnected', 
+                content: 'SSE connection closed' 
+            });
+        }
+
+        function clearFeed() {
+            document.getElementById('newsFeed').innerHTML = `
+                <div style="text-align: center; color: #666; margin-top: 50px;">
+                    Feed cleared. Connect to SSE to start receiving updates...
+                </div>
+            `;
+        }
+
+        async function publishNews() {
+            const title = document.getElementById('newsTitle').value;
+            const content = document.getElementById('newsContent').value;
+            const topic = document.getElementById('topic').value;
+
+            if (!title || !content) {
+                alert('Please fill in both title and content');
+                return;
+            }
+
+            const newsData = {
+                title: title,
+                content: content,
+                timestamp: new Date().toISOString(),
+                category: topic.replace('news-', '')
+            };
+
+            try {
+                // Publish via Spring Boot backend
+                let response = await fetch(`http://localhost:8080/api/news/publish/${topic}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newsData)
+                });
+
+                if (response.ok) {
+                    document.getElementById('newsTitle').value = '';
+                    document.getElementById('newsContent').value = '';
+                    addNewsItem({ 
+                        title: 'News Published', 
+                        content: `Successfully published: "${title}" to ${topic}` 
+                    });
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Publish error:', error);
+                addNewsItem({ 
+                    title: 'Publish Error', 
+                    content: `Failed to publish news: ${error.message}` 
+                });
+            }
+        }
+
+        // Add some demo data on load
+        window.onload = function() {
+            addNewsItem({ 
+                title: 'Welcome to Distributed News', 
+                content: 'Click "Connect to SSE" to start receiving real-time news updates!' 
+            });
+        };
+    </script>
+</body>
+</html>

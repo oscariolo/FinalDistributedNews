@@ -1,0 +1,56 @@
+
+services:
+
+  zilla:
+    image: ghcr.io/aklivity/zilla:latest
+    pull_policy: always
+    depends_on:
+      - kafka
+    ports:
+      - 7114:7114
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
+    volumes:
+      - ./zilla.yaml:/etc/zilla/zilla.yaml
+      - ./index.html:/var/www/index.html
+    command: start -v -e
+
+  kafka:
+    image: apache/kafka:3.8.0
+    hostname: kafka
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:9093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
+
+  kafka-init:
+    image: apache/kafka:3.8.0
+    command:
+        - /bin/sh
+        - -c
+        - |
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic events
+    depends_on:
+      - kafka
+    init: true
+
+  kafka_messenger:
+    image: apache/kafka:3.8.0
+    command:
+        - /bin/sh
+        - -c
+        - |
+          while true; do echo "{ \"data\": \"Hello, world $(date)\" }" | /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka:29092 --topic events; echo "message sent, waiting 5 sec"; sleep 5; done
+    depends_on:
+      - kafka

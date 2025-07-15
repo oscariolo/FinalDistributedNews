@@ -1,0 +1,70 @@
+
+services:
+  kafka:
+    image: apache/kafka:3.8.0
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:9093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+  zilla:
+    image: ghcr.io/aklivity/zilla:latest
+    pull_policy: always
+    depends_on:
+      - kafka
+    ports:
+      - "7114:7114"  # HTTP/REST API & SSE
+      - "9090:9090"  # Zilla management
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
+    volumes:
+      - ./zilla.yaml:/etc/zilla/zilla.yaml
+    command: start -v -e
+    restart: unless-stopped
+
+  # Simple web server for the test page
+  web-server:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    restart: unless-stopped
+
+  distributednews-backend:
+    build: ./distributednewsbackend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8080
+    restart: unless-stopped
+
+  # Optional: News generator for testing SSE
+  news-generator:
+    image: confluentinc/cp-kafkacat:7.1.9
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true; do 
+          echo '{"title": "Breaking News", "content": "News at '$(date)'", "category": "general"}' | kafkacat -P -b kafka:29092 -t news-general -k "news-$(date +%s)"
+          echo "News sent, waiting 10 seconds..."
+          sleep 10
+        done
+    depends_on:
+      - kafka
+    profiles:
+      - testing
