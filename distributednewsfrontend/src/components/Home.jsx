@@ -1,25 +1,45 @@
 import NewsCard from "./NewsCard";
 import Navbar from "./Navbar";
 
+//simulacion de datos
+const usuario = {nombre: "Santiago"};
+const noticias = [
+  { id: 1, titulo: "Nueva función en la app", descripcion: "Ahora puedes guardar noticias.", fecha: "2025-07-16" },
+  { id: 2, titulo: "Actualización de seguridad", descripcion: "Mejoras en la protección de datos.", fecha: "2025-07-15" },
+];
+const suscripcionesActivas = 2;
+
 const Home = () => {
 	return (
 		<div>
 			<Navbar/>
-			<div className="grid grid-cols-12 container mx-auto">
-				<div className="container mx-auto p-4 col-span-3">
-					<h3 className="text-xl font-bold">Suscripciones</h3>
-					<ul className="py-4">
-						<li className="text-neutral-700">Sub 1</li>
-						<li className="text-neutral-700">Sub 2</li>
-					</ul>
+			<div className="container mx-auto p-8">
+				{/*saludos y estadisticas*/ }
+				<div className="mb-8">
+					<h1 className="text-2xl font-bold mb-2">!Bienvenido, {usuario.nombre}¡</h1>
+					<div className="flex gap-8 text-lg">
+					 <span>
+						<span className="font-semibold">{noticias.length}</span> noticias nuevas	
+					 </span>
+					 <span>
+						<span className="font-semibold">{suscripcionesActivas}</span> suscripciones activas
+					 </span>
+					</div>
 				</div>
-				<div className="container mx-auto p-4 col-span-9">
-					<h2 className="text-3xl font-black">Tus nuevas noticias</h2>
-					<NewsCard />
+				{/*Noticias recientes*/ }
+				<div>
+					<h2 className="text-xl font-bold mb-4">Noticias recientes</h2>
+					{noticias.length === 0 ? (
+						<div> No hay noticias nuevas.</div>
+					) : (
+						noticias.map(noticia => (
+							<NewsCard key={noticia.id} noticia={noticia} />
+						))
+					)}
 				</div>
 			</div>
 		</div>
-	)
-}
+	);
+};
 
 export default Home;

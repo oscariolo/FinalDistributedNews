@@ -1,5 +1,5 @@
 # Usa una imagen base liviana
-FROM node:20
+FROM node:20-alpine
 
 # Directorio de trabajo
 WORKDIR /app
