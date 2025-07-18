@@ -1,5 +1,17 @@
 
 services:
+  haproxy:
+    image: haproxy:latest
+    ports:
+      - "443:443"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    restart: unless-stopped
+    depends_on:
+      - backend1
+      - backend2
+    
+
   kafka:
     image: apache/kafka:3.8.0
     ports:
@@ -17,14 +29,27 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-  zilla:
+  zilla1:
     image: ghcr.io/aklivity/zilla:latest
     pull_policy: always
     depends_on:
       - kafka
     ports:
       - "7114:7114"  # HTTP/REST API & SSE
-      - "9090:9090"  # Zilla management
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
+    volumes:
+      - ./zilla.yaml:/etc/zilla/zilla.yaml
+    command: start -v -e
+    restart: unless-stopped
+  
+  zilla2:
+    image: ghcr.io/aklivity/zilla:latest
+    pull_policy: always
+    depends_on:
+      - kafka
+    ports:
+      - "7115:7115"  # HTTP/REST API & SSE
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:
@@ -32,19 +57,10 @@ services:
     command: start -v -e
     restart: unless-stopped
 
-  # Simple web server for the test page
-  web-server:
-    image: nginx:alpine
-    ports:
-      - "8081:80"
-    volumes:
-      - ./index.html:/usr/share/nginx/html/index.html:ro
-    restart: unless-stopped
-
-  distributednews-backend:
+  backend1:
     build: ./distributednewsbackend
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - kafka
       - ollama
@@ -57,6 +73,26 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: news1234
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_INSTANCE: backend1
+    restart: unless-stopped
+  
+  backend2:
+    build: ./distributednewsbackend
+    ports:
+      - "8082:8080"
+    depends_on:
+      - kafka
+      - ollama
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OLLAMA_MODEL: llama2
+      SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/newsdb
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: news1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_INSTANCE: backend2
     restart: unless-stopped
 
   #Database postgres
@@ -78,7 +114,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - distributednews-backend
+      - haproxy
     environment:
       REACT_APP_BACKEND_URL: http://localhost:8080
     restart: unless-stopped
