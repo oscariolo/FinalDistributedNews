@@ -4,14 +4,16 @@ services:
     image: haproxy:latest
     ports:
       - "443:443"
+      - "8080:8080"
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
     depends_on:
+      - zilla1
+      - zilla2
       - backend1
       - backend2
-    
-
+  
   kafka:
     image: apache/kafka:3.8.0
     ports:
@@ -35,7 +37,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "7114:7114"  # HTTP/REST API & SSE
+      - "7115:7114"  # HTTP/REST API & SSE
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:
@@ -49,7 +51,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "7115:7115"  # HTTP/REST API & SSE
+      - "7116:7114"  # HTTP/REST API & SSE
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:

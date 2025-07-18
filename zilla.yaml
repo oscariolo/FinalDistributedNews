@@ -21,6 +21,11 @@ bindings:
               :authority: localhost:7114
               :path: /api/news/news-general
         exit: north_sse_server
+      - when:
+          - headers:
+              :scheme: http
+              :path: /news-stream
+        exit: north_sse_server
 
   # SSE Server With an exit to Kafka
   north_sse_server:
@@ -35,6 +40,11 @@ bindings:
     routes:
       - when:
           - path: /api/news/news-general
+        with:
+          topic: news-general
+        exit: north_kafka_cache_client
+      - when:
+          - path: /news-stream
         with:
           topic: news-general
         exit: north_kafka_cache_client
