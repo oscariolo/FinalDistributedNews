@@ -1,5 +1,7 @@
 package com.example.distributednewsbackend.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,10 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.distributednewsbackend.services.KafkaProducerService;
 
+
+
 import java.time.LocalDateTime;
 
 @RestController
 public class TestAproxyController {
+    private static final Logger logger = LoggerFactory.getLogger(TestAproxyController.class);
     //Clase para probar que el balanceo de haproxy funciona correctamente
     @Value("${server.instance}")
     private String serverInstance;
@@ -25,13 +30,22 @@ public class TestAproxyController {
 
     @GetMapping("/test")
     public String test() {
-        return "Test successful! from " + serverInstance;
-    }
+        logger.info("=== TEST ENDPOINT CALLED ===");
+        logger.info("Server instance: {}", serverInstance);
+        logger.info("Server port: {}", serverPort);
+        logger.warn("This is a WARNING level message to test logging");
+        logger.error("This is an ERROR level message to test logging");
+        
+        String response = "Test successful! from " + serverInstance;
+        logger.info("Returning response: {}", response);
+        return response;
+}
     
     @PostMapping("/auto-publish")
     public String autoPublish(@RequestParam(defaultValue = "news-general") String topic,
                              @RequestParam(defaultValue = "Auto-generated news") String message) {
         try {
+            logger.info("Auto-publishing news to topic: {}", topic);
             String newsJson = String.format(
                 "{\"title\": \"Auto News from %s\", \"content\": \"%s\", \"category\": \"general\", \"timestamp\": \"%s\", \"server\": \"%s\"}",
                 serverInstance, message, LocalDateTime.now().toString(), serverInstance

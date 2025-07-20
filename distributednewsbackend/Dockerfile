@@ -14,12 +14,21 @@ COPY src src
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
+
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+
+# Create log directory and set proper ownership BEFORE switching to spring user
+RUN mkdir -p /var/log/spring && \
+    chown -R spring:spring /var/log/spring && \
+    chmod 755 /var/log/spring
 
 # Copy the built JAR from build stage
 COPY --from=build /workspace/app/target/*.jar app.jar
+RUN chown spring:spring /app.jar
+
+# Switch to spring user
+USER spring:spring
 
 ENTRYPOINT ["java","-jar","/app.jar"]

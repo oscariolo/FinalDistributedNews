@@ -1,4 +1,3 @@
-
 services:
   haproxy:
     image: haproxy:latest
@@ -31,13 +30,14 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+  
   zilla1:
     image: ghcr.io/aklivity/zilla:latest
     pull_policy: always
     depends_on:
       - kafka
     ports:
-      - "7115:7114"  # HTTP/REST API & SSE
+      - "7115:7114"
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:
@@ -51,7 +51,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "7116:7114"  # HTTP/REST API & SSE
+      - "7116:7114"
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:
@@ -76,6 +76,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: news1234
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_INSTANCE: backend1
+      LOGGING_FILE_NAME: /var/log/spring/backend1.log
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_EXAMPLE_DISTRIBUTEDNEWSBACKEND: DEBUG
+    volumes:
+      - springlogs:/var/log/spring
     restart: unless-stopped
   
   backend2:
@@ -95,9 +100,13 @@ services:
       SPRING_DATASOURCE_PASSWORD: news1234
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_INSTANCE: backend2
+      LOGGING_FILE_NAME: /var/log/spring/backend2.log
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_EXAMPLE_DISTRIBUTEDNEWSBACKEND: DEBUG
+    volumes:
+      - springlogs:/var/log/spring
     restart: unless-stopped
 
-  #Database postgres
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -130,8 +139,31 @@ services:
     environment:
       OLLAMA_MODEL: llama2
     restart: unless-stopped
+  
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    volumes:
+      - springlogs:/var/log/spring:ro
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    depends_on:
+      - elasticsearch
+      - backend1
+      - backend2
+    command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
+    restart: unless-stopped
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    restart: unless-stopped
 
-  # Optional: News generator for testing SSE
   news-generator:
     image: confluentinc/cp-kafkacat:7.1.9
     command:
@@ -147,5 +179,8 @@ services:
       - kafka
     profiles:
       - testing
+
 volumes:
   news-database:
+  springlogs:
+  es-data:
