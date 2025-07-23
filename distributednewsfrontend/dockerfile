@@ -1,20 +1,32 @@
-# Usa una imagen base liviana
-FROM node:20
+# Etapa 1: Construcción
+FROM node:20-alpine AS builder
 
-# Directorio de trabajo
+# Crea directorio de trabajo
 WORKDIR /app
 
-# Copia dependencias
+# Copia solo dependencias primero
 COPY package*.json ./
 
 # Instala dependencias
 RUN npm install
 
-# Copia el resto de archivos
+# Copia el resto del código
 COPY . .
 
-# Expone el puerto de desarrollo de Vite
-EXPOSE 3000
+# Genera build de producción
+RUN npm run build
 
-# Ejecuta en modo desarrollo
-CMD ["npm", "run", "dev"]
+# Etapa 2: Servir con Nginx
+FROM nginx:alpine
+
+# Copia build de Vite a la carpeta pública de Nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copia configuración personalizada de Nginx (opcional, si usas React Router)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expone el puerto HTTP
+EXPOSE 80
+
+# Arranca Nginx
+CMD ["nginx", "-g", "daemon off;"]

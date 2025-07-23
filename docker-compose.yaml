@@ -4,6 +4,7 @@ services:
     ports:
       - "443:443"
       - "8080:8080"
+      - "8404:8404"
     volumes:
       - ./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
@@ -12,7 +13,7 @@ services:
       - zilla2
       - backend1
       - backend2
-  
+
   kafka:
     image: apache/kafka:3.8.0
     ports:
@@ -30,7 +31,7 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-  
+
   zilla1:
     image: ghcr.io/aklivity/zilla:latest
     pull_policy: always
@@ -50,7 +51,7 @@ services:
       options:
         fluentd-address: localhost:24224
         tag: docker.zilla1
-  
+
   zilla2:
     image: ghcr.io/aklivity/zilla:latest
     pull_policy: always
@@ -77,11 +78,11 @@ services:
       - "8081:8080"
     depends_on:
       - kafka
-      - ollama
+      # - ollama
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OLLAMA_MODEL: llama2
-      SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
+      # OLLAMA_MODEL: llama2
+      # SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/newsdb
       SPRING_DATASOURCE_USERNAME: admin
@@ -94,18 +95,18 @@ services:
     volumes:
       - springlogs:/var/log/spring
     restart: unless-stopped
-  
+
   backend2:
     build: ./distributednewsbackend
     ports:
       - "8082:8080"
     depends_on:
       - kafka
-      - ollama
+      # - ollama
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OLLAMA_MODEL: llama2
-      SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
+      # OLLAMA_MODEL: llama2
+      # SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/newsdb
       SPRING_DATASOURCE_USERNAME: admin
@@ -118,27 +119,18 @@ services:
     volumes:
       - springlogs:/var/log/spring
     restart: unless-stopped
-  
+
   frontend1:
     build: ./distributednewsfrontend
     ports:
-      - "3001:3000"
-    depends_on:
-      - haproxy
-    environment:
-      REACT_APP_BACKEND_URL: http://localhost:8080
+      - "3001:80"
     restart: unless-stopped
-  
+
   frontend2:
     build: ./distributednewsfrontend
     ports:
-      - "3002:3000"
-    depends_on:
-      - haproxy
-    environment:
-      REACT_APP_BACKEND_URL: http://localhost:8080
+      - "3002:80"
     restart: unless-stopped
-
 
   postgres:
     image: postgres:15-alpine
@@ -152,17 +144,17 @@ services:
     volumes:
       - news-database:/var/lib/postgresql/data
     restart: unless-stopped
-  
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ./ollama:/ollama
-    environment:
-      OLLAMA_MODEL: llama2
-    restart: unless-stopped
-  
+
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ./ollama:/ollama
+  #   environment:
+  #     OLLAMA_MODEL: llama2
+  #   restart: unless-stopped
+
   fluent-bit:
     image: grafana/fluent-bit-plugin-loki:latest
     ports:
@@ -176,7 +168,7 @@ services:
       - loki
     command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
     restart: unless-stopped
-  
+
   loki:
     image: grafana/loki:latest
     ports:
@@ -194,7 +186,7 @@ services:
     depends_on:
       - loki
     restart: unless-stopped
-  
+
   news-generator:
     image: confluentinc/cp-kafkacat:7.1.9
     command:
