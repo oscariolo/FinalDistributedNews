@@ -118,6 +118,27 @@ services:
     volumes:
       - springlogs:/var/log/spring
     restart: unless-stopped
+  
+  frontend1:
+    build: ./distributednewsfrontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - haproxy
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:8080
+    restart: unless-stopped
+  
+  frontend2:
+    build: ./distributednewsfrontend
+    ports:
+      - "3002:3000"
+    depends_on:
+      - haproxy
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:8080
+    restart: unless-stopped
+
 
   postgres:
     image: postgres:15-alpine
@@ -130,16 +151,6 @@ services:
       - "5432:5432"
     volumes:
       - news-database:/var/lib/postgresql/data
-    restart: unless-stopped
-  
-  distributednews-frontend:
-    build: ./distributednewsfrontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - haproxy
-    environment:
-      REACT_APP_BACKEND_URL: http://localhost:8080
     restart: unless-stopped
   
   ollama:
@@ -175,7 +186,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3001:3000"
+      - "3400:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin123
     volumes:
