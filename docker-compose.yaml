@@ -5,7 +5,7 @@ services:
       - "443:443"
       - "8080:8080"
     volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
     depends_on:
       - zilla1
@@ -36,28 +36,40 @@ services:
     pull_policy: always
     depends_on:
       - kafka
+      - fluent-bit
     ports:
       - "7115:7114"
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:
-      - ./zilla.yaml:/etc/zilla/zilla.yaml
+      - ./configs/zilla.yaml:/etc/zilla/zilla.yaml
     command: start -v -e
     restart: unless-stopped
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: docker.zilla1
   
   zilla2:
     image: ghcr.io/aklivity/zilla:latest
     pull_policy: always
     depends_on:
       - kafka
+      - fluent-bit
     ports:
       - "7116:7114"
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
     volumes:
-      - ./zilla.yaml:/etc/zilla/zilla.yaml
+      - ./configs/zilla.yaml:/etc/zilla/zilla.yaml
     command: start -v -e
     restart: unless-stopped
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: docker.zilla2
 
   backend1:
     build: ./distributednewsbackend
@@ -141,29 +153,37 @@ services:
     restart: unless-stopped
   
   fluent-bit:
-    image: fluent/fluent-bit:latest
+    image: grafana/fluent-bit-plugin-loki:latest
+    ports:
+      - "24224:24224"
     volumes:
       - springlogs:/var/log/spring:ro
-      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - fluentlogs:/var/log/fluent-bit
+      - ./configs/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./configs/etc/add_service.lua:/fluent-bit/etc/add_service.lua:ro
     depends_on:
-      - elasticsearch
-      - backend1
-      - backend2
+      - loki
     command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
     restart: unless-stopped
   
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  loki:
+    image: grafana/loki:latest
     ports:
-      - "9200:9200"
-    volumes:
-      - es-data:/usr/share/elasticsearch/data
+      - "3100:3100"
     restart: unless-stopped
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - ./configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+  
   news-generator:
     image: confluentinc/cp-kafkacat:7.1.9
     command:
@@ -183,4 +203,4 @@ services:
 volumes:
   news-database:
   springlogs:
-  es-data:
+  fluentlogs:

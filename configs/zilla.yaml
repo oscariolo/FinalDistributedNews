@@ -78,3 +78,9 @@ telemetry:
   exporters:
     stdout_logs_exporter:
       type: stdout
+  metrics:
+    - http.request.size
+    - http.response.size
+    - http.active.requests
+    - stream.active.received
+    - stream.active.sent
