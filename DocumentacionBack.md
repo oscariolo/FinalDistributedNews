@@ -4,21 +4,33 @@ Content-Type: application/json
 
 // Request:
 {
-    "username": "string",
-    "password": "string"
+    "username": "jonathan_user",
+    "password": "mi_password123"
 }
 
-// Response exitosa:
+// Response exitosa (200):
 {
     "success": true,
     "data": {
         "id": 1,
-        "username": "jonathan_ortega",
+        "username": "jonathan_user",
         "fullName": "Jonathan Ortega",
         "email": "jonathan@email.com",
-        "token": "jwt-token-here",
-        "preferences": ["tech", "sports"] // opcional
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "roles": ["USER"]
     }
+}
+
+// Response error (401):
+{
+    "success": false,
+    "message": "Credenciales incorrectas"
+}
+
+// Response error (404):
+{
+    "success": false,
+    "message": "Usuario no encontrado"
 }
 
 Google OAuth:

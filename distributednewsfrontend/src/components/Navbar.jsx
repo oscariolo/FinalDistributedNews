@@ -36,7 +36,14 @@ const Navbar = () => {
 
     const handleLogout = () => {
         console.log("Cerrando sesión...");
-        localStorage.clear(); // Limpia datos de sesión
+        
+        // Limpiar localStorage
+        localStorage.clear();
+        
+        // Disparar evento personalizado para notificar el cambio
+        window.dispatchEvent(new Event('localStorageChange'));
+        
+        // Redirigir al login
         navigate('/login');
     };
 
