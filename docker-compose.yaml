@@ -1,36 +1,39 @@
 services:
   haproxy-main:
-    image: haproxy:latest
+    build:
+      context: ./configs/haproxy
+      dockerfile: Dockerfile
+    environment:
+      - KEEPALIVED_CONF=/keepalived/keepalived-main.conf
     cap_add:
       - NET_ADMIN
+    privileged: true
     ports:
       - "443:443"
       - "8080:8080"
-    restart: unless-stopped
     depends_on:
-      - zilla1
-      - zilla2
       - backend1
       - backend2
+      - frontend1
+      - frontend2
+    networks:
+      - haproxy_net
     volumes:
-      - ./configs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./configs/haproxy/keepalived/keepalived-main.conf:/keepalived/keepalived-main.conf:ro
   
   haproxy-backup:
-    image: haproxy:latest
+    build:
+      context: ./configs/haproxy
+      dockerfile: Dockerfile
+    environment:
+      - KEEPALIVED_CONF=/keepalived/keepalived-backup.conf
     cap_add:
       - NET_ADMIN
-    ports:
-      - "444:443"
-      - "8882:8080"
+    privileged: true
     volumes:
-      - ./configs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - ./configs/haproxy/keepalived-backup.conf:/etc/keepalived/keepalived.conf:ro
-    restart: unless-stopped
-    depends_on:
-      - zilla1
-      - zilla2
-      - backend1
-      - backend2
+      - ./configs/haproxy/keepalived/keepalived-backup.conf:/keepalived/keepalived-backup.conf:ro
+    networks:
+      - haproxy_net
 
 
   kafka:
@@ -226,3 +229,7 @@ volumes:
   news-database:
   springlogs:
   fluentlogs:
+
+networks:
+  haproxy_net:
+    driver: bridge
