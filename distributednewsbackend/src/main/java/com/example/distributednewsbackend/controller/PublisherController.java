@@ -48,7 +48,7 @@ public class PublisherController {
             }
             """, news.getTitle(), news.getDescription(), news.getLead(), news.getAuthor(), news.getTopic(), news.getPublishedDate());
 
-             kafkaProducerService.sendMessage(news.getTopic(), message);
+            kafkaProducerService.sendMessage("news-general", message);
             logger.info("News published and sent to Kafka topic: {}", news.getTopic());
             return ResponseEntity.ok("News saved and sent to topic: " + news.getTopic());
         } catch (Exception e) {
