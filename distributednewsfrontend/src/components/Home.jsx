@@ -28,7 +28,7 @@ const Home = () => {
 				</div>
 				{/*Noticias recientes*/ }
 				<div>
-					<h2 className="text-xl font-bold mb-4">Noticias recientes</h2>
+					<h2 className="text-xl font-bold mb-4">Noticias Recientes</h2>
 					{noticias.length === 0 ? (
 						<div> No hay noticias nuevas.</div>
 					) : (
