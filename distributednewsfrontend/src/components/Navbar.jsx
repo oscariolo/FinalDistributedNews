@@ -8,18 +8,35 @@ const Navbar = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const menuRef = useRef(null);
 
+    // Obtener datos del usuario del localStorage
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const username = localStorage.getItem('username') || '';
+    const userEmail = localStorage.getItem('userEmail') || '';
+    const fullName = localStorage.getItem('fullName') || username;
+
     const linkClass = (path) =>
         `hover:border-b-2 border-black px-2 py-1 transition ${
             location.pathname === path ? "border-b-2 font-bold text-blue-700" : ""
         }`;
 
-    const handleLogout = () => {
-        // Aquí puedes agregar la lógica de logout
-        console.log("Cerrando sesión...");
-        // Por ejemplo: localStorage.clear(), eliminar tokens, etc.
-        localStorage.clear(); // Limpia datos de sesión
+    // Función para generar las iniciales del avatar
+    const generateAvatar = (name) => {
+        if (!name) return 'U'; // Usuario por defecto
         
-        // Redirige a la página de login
+        const words = name.trim().split(' ');
+        
+        if (words.length >= 2) {
+            // Si tiene nombre y apellido: primera letra de cada uno
+            return (words[0][0] + words[1][0]).toUpperCase();
+        } else {
+            // Si solo tiene nombre: primera letra
+            return words[0][0].toUpperCase();
+        }
+    };
+
+    const handleLogout = () => {
+        console.log("Cerrando sesión...");
+        localStorage.clear(); // Limpia datos de sesión
         navigate('/login');
     };
 
@@ -31,12 +48,10 @@ const Navbar = () => {
             }
         };
 
-        // Agregar el event listener cuando el menú está abierto
         if (showUserMenu) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
-        // Cleanup: remover el event listener
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
@@ -65,18 +80,18 @@ const Navbar = () => {
                 {/* Avatar usuario con menú desplegable */}
                 <div className="relative" ref={menuRef}>
                     <div 
-                        className='flex border-1 border-white rounded-full w-9 h-9 justify-center items-center bg-neutral-200 hover:bg-neutral-400 hover:cursor-pointer'
+                        className='flex border-1 border-white rounded-full w-9 h-9 justify-center items-center bg-neutral-200 hover:bg-neutral-400 hover:cursor-pointer text-sm font-semibold'
                         onClick={() => setShowUserMenu(!showUserMenu)}
                     >
-                        <p>JO</p>
+                        <p>{generateAvatar(fullName)}</p>
                     </div>
                     
                     {/* Menú desplegable */}
                     {showUserMenu && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
                             <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                                <div className="font-medium">Jonathan</div>
-                                <div className="text-gray-500">jonathan@email.com</div>
+                                <div className="font-medium">{fullName || username}</div>
+                                <div className="text-gray-500">{userEmail || 'usuario@email.com'}</div>
                             </div>
                             <Link 
                                 to="/perfil" 

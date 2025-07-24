@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-
 const Login = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -16,33 +15,73 @@ const Login = () => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Aquí puedes agregar la lógica de autenticación
-        console.log("Datos de login:", formData);
-        
-        // Simular login exitoso (aquí conectarías con tu backend)
-        // Por ejemplo: validar credenciales, obtener token, etc.
-        
-        // Guardar datos de sesión (temporal)
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('username', formData.username);
-        
-        // Redirigir a home
-        navigate('/');
+        try {
+            // ToDo: Conectar con backend
+            // const response = await fetch('/api/auth/login', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(formData)
+            // });
+            // const userData = await response.json();
+            
+            // SIMULACIÓN - Remover cuando conectes con backend
+            const userData = {
+                id: 1,
+                username: formData.username,
+                fullName: "Jonathan Ortega", // Esto vendrá del backend
+                email: "jonathan@email.com",
+                token: "fake-jwt-token"
+            };
+            
+            // Guardar datos de sesión
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userId', userData.id);
+            localStorage.setItem('username', userData.username);
+            localStorage.setItem('fullName', userData.fullName);
+            localStorage.setItem('userEmail', userData.email);
+            localStorage.setItem('authToken', userData.token);
+            
+            console.log("Login exitoso:", userData);
+            navigate('/');
+            
+        } catch (error) {
+            console.error("Error en login:", error);
+            alert("Error al iniciar sesión");
+        }
     };
 
-    const handleGoogleLogin = () => {
-        // Aquí iría la lógica de Google OAuth
-        console.log("Login con Google");
-        
-        // Simular login exitoso con Google
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('username', 'Usuario Google');
-        
-        // Redirigir a home
-        navigate('/');
+    const handleGoogleLogin = async () => {
+        try {
+            // ToDo: Implementar Google OAuth
+            // window.location.href = '/api/auth/google';
+            
+            // SIMULACIÓN - Remover cuando conectes con backend
+            const googleUserData = {
+                id: 2,
+                username: "google_user",
+                fullName: "Usuario Google",
+                email: "usuario@gmail.com",
+                token: "fake-google-token"
+            };
+            
+            // Guardar datos de sesión de Google
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userId', googleUserData.id);
+            localStorage.setItem('username', googleUserData.username);
+            localStorage.setItem('fullName', googleUserData.fullName);
+            localStorage.setItem('userEmail', googleUserData.email);
+            localStorage.setItem('authToken', googleUserData.token);
+            
+            console.log("Login con Google exitoso:", googleUserData);
+            navigate('/');
+            
+        } catch (error) {
+            console.error("Error en Google login:", error);
+            alert("Error al iniciar sesión con Google");
+        }
     };
 
     return (
@@ -115,7 +154,7 @@ const Login = () => {
                 <div className="text-center mt-6 space-y-2">
                     <a href="#" className="text-sm text-blue-600 hover:underline">¿Olvidaste tu contraseña?</a>
                     <div className="text-sm text-gray-600">
-                        ¿No tienes cuenta? <Link to={"/registro"} className="text-blue-600 hover:underline">Regístrate</Link>
+                        ¿No tienes cuenta? <Link to={"/registrarse"} className="text-blue-600 hover:underline">Regístrate</Link>
                     </div>
                 </div>
             </div>
