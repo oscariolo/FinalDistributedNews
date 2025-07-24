@@ -23,7 +23,7 @@ public class News {
   private Long id;
 
   private String title;
-  private String desc;
+  private String description;
   private String lead; //Lead es como el resumen o gancho de la noticia
   private String author;
   private String topic;
@@ -31,12 +31,6 @@ public class News {
 
   public News(){
 
-  }
-
-  public News(String title, String desc, String topic){
-    this.title = title;
-    this.desc = desc;
-    this.topic = topic;
   }
 
 }

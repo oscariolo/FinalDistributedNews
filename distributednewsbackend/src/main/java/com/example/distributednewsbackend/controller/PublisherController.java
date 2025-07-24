@@ -46,16 +46,22 @@ public class PublisherController {
                 "topic": "%s",
                 "publishedDate": "%s"
             }
-            """, news.getTitle(), news.getDesc(), news.getLead(), news.getAuthor(), news.getTopic(), news.getPublishedDate());
+            """, news.getTitle(), news.getDescription(), news.getLead(), news.getAuthor(), news.getTopic(), news.getPublishedDate());
 
-            kafkaProducerService.sendMessage(news.getTopic(), message);
-            logger.info("Message sent to topic: {}", news.getTopic());
-            return ResponseEntity.ok("Message sent successfully to topic: " + news.getTopic());
+             kafkaProducerService.sendMessage(news.getTopic(), message);
+            logger.info("News published and sent to Kafka topic: {}", news.getTopic());
+            return ResponseEntity.ok("News saved and sent to topic: " + news.getTopic());
         } catch (Exception e) {
             logger.error("Error publishing news: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Failed to publish news: " + e.getMessage());
         }
     }
+
+    @GetMapping("/publish")
+    public Iterable<News> findAllNews(){
+        return this.newsRepository.findAll();
+    }
+
 
     @PostMapping("/ai-process")
     public ResponseEntity<String> aiProcess(@RequestBody String rawInput) {
