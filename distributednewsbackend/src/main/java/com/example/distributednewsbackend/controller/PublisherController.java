@@ -1,6 +1,10 @@
 package com.example.distributednewsbackend.controller;
+import com.example.distributednewsbackend.model.News;
+import com.example.distributednewsbackend.repository.NewsRepository;
 import com.example.distributednewsbackend.services.AIProcessorService;
 import com.example.distributednewsbackend.services.KafkaProducerService;
+
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +25,35 @@ public class PublisherController {
     @Autowired
     private AIProcessorService aiProcessorService;
 
+    @Autowired
+    private NewsRepository newsRepository;
 
     
     @PostMapping("/publish")
-    public ResponseEntity<String> publishNews(@RequestParam String topic, 
-                                            @RequestBody String message) {
+    public ResponseEntity<String> publishNews(@RequestBody News news) {
         try {
-            kafkaProducerService.sendMessage(topic, message);
-            logger.info("Message sent to topic: {}", topic);
-            return ResponseEntity.ok("Message sent successfully to topic: " + topic);
+            // Guardar en la base de datos
+            news.setPublishedDate(new Date());
+            newsRepository.save(news);
+
+            // Mandar a kafka
+            String message = String.format("""
+            {
+                "title": "%s",
+                "desc": "%s",
+                "lead": "%s",
+                "author": "%s",
+                "topic": "%s",
+                "publishedDate": "%s"
+            }
+            """, news.getTitle(), news.getDesc(), news.getLead(), news.getAuthor(), news.getTopic(), news.getPublishedDate());
+
+            kafkaProducerService.sendMessage(news.getTopic(), message);
+            logger.info("Message sent to topic: {}", news.getTopic());
+            return ResponseEntity.ok("Message sent successfully to topic: " + news.getTopic());
         } catch (Exception e) {
-            logger.error("Failed to send message to topic: {}. Error: {}", topic, e.getMessage());
-            return ResponseEntity.badRequest().body("Failed to send message: " + e.getMessage());
+            logger.error("Error publishing news: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Failed to publish news: " + e.getMessage());
         }
     }
 
