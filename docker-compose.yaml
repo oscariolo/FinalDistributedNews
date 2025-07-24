@@ -1,35 +1,30 @@
 services:
   haproxy-main:
-    image: haproxy-keepalived:latest
-    container_name: haproxy-main
+    image: haproxy:latest
     cap_add:
       - NET_ADMIN
     ports:
       - "443:443"
       - "8080:8080"
-    volumes:
-      - ./configs/keepalived-haproxy-main.cfg:/etc/keepalived/keepalived.conf:ro
-      - ./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
     depends_on:
       - zilla1
       - zilla2
       - backend1
       - backend2
-    entrypoint: ["/bin/sh", "-c", "keepalived -n -l -f /etc/keepalived/keepalived.conf & haproxy -f /usr/local/etc/haproxy/haproxy.cfg & wait"]
-
+    volumes:
+      - ./configs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
   
   haproxy-backup:
-    image: haproxy-keepalived:latest
-    container_name: haproxy-backup
+    image: haproxy:latest
     cap_add:
       - NET_ADMIN
     ports:
       - "444:443"
       - "8882:8080"
     volumes:
-      - ./configs/keepalived-haproxy-backup.cfg:/etc/keepalived/keepalived.conf:ro
-      - ./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./configs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./configs/haproxy/keepalived-backup.conf:/etc/keepalived/keepalived.conf:ro
     restart: unless-stopped
     depends_on:
       - zilla1
