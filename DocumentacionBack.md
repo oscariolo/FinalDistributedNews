@@ -1,3 +1,4 @@
+## Endpoint de login Tradicional
 Login tradicional:
 POST /api/auth/login
 Content-Type: application/json
@@ -51,24 +52,42 @@ GET /api/auth/google/callback
     }
 }
 
-Registro:
+## Endpoint de Registro
+
 POST /api/auth/register
 Content-Type: application/json
 
 // Request:
 {
-    "nombre": "string",
-    "usuario": "string", 
-    "email": "string",
-    "fechaNacimiento": "YYYY-MM-DD",
-    "contraseña": "string",
-    "selectedTopics": [1, 2, 3] // IDs de tópicos
+    "nombre": "Juan Pérez",
+    "usuario": "juan_perez",
+    "email": "juan@ejemplo.com",
+    "fechaNacimiento": "1995-05-15",
+    "contraseña": "mi_password123",
+    "selectedTopics": [1, 2, 3]  // IDs de tópicos seleccionados
 }
 
-// Response:
+// Response exitosa (201):
 {
     "success": true,
-    "message": "Usuario registrado exitosamente"
+    "message": "Usuario registrado exitosamente",
+    "data": {
+        "id": 123,
+        "username": "juan_perez",
+        "email": "juan@ejemplo.com"
+    }
+}
+
+// Response error (409 - Conflicto):
+{
+    "success": false,
+    "message": "El usuario o email ya existe"
+}
+
+// Response error (400 - Datos inválidos):
+{
+    "success": false,
+    "message": "Email inválido" // o cualquier error de validación
 }
 
 2. Campos requeridos en localStorage:
