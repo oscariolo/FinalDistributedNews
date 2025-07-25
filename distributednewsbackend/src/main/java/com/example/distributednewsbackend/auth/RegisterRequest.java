@@ -1,8 +1,8 @@
 package com.example.distributednewsbackend.auth;
 
-import com.example.distributednewsbackend.model.Topic;
+import java.util.Set;
 
-import jakarta.persistence.ElementCollection;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,8 +23,6 @@ public class RegisterRequest {
   private String email;
   private String birthday;
   private String password;
-
-  @ElementCollection
-  private java.util.Set<Topic> subs;
+  private Set<Long> subs;
   
 }

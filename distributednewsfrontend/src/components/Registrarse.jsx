@@ -43,6 +43,8 @@ const Registrarse = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        console.log(`${import.meta.env.VITE_API_URL}/api/auth/register`);
         
         // Validaciones frontend
         if (formData.contraseña !== formData.confirmarContraseña) {

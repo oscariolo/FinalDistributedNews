@@ -1,6 +1,7 @@
 package com.example.distributednewsbackend.auth;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {

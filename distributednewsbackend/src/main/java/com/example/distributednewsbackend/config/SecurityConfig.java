@@ -30,13 +30,13 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
             .anyRequest().authenticated())
-        .formLogin(form -> form.disable()) // DESACTIVA EL FORM LOGIN DE SPRING
-        .httpBasic(basic -> basic.disable()) // (opcional) también desactiva Basic Auth
-        .exceptionHandling(exception -> exception
-            .authenticationEntryPoint((request, response, authException) -> {
-              response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Unauthorized");
-            }))
+        // .formLogin(form -> form.disable()) 
+        // .httpBasic(basic -> basic.disable()) 
+        // .exceptionHandling(exception -> exception
+        //     .authenticationEntryPoint((request, response, authException) -> {
+        //       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        //       response.getWriter().write("Unauthorized");
+        //     }))
         .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider)
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
