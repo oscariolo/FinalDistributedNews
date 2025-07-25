@@ -92,6 +92,7 @@ services:
       LOGGING_FILE_NAME: /var/log/spring/backend1.log
       LOGGING_LEVEL_ROOT: INFO
       LOGGING_LEVEL_COM_EXAMPLE_DISTRIBUTEDNEWSBACKEND: DEBUG
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - springlogs:/var/log/spring
     restart: unless-stopped
@@ -116,6 +117,7 @@ services:
       LOGGING_FILE_NAME: /var/log/spring/backend2.log
       LOGGING_LEVEL_ROOT: INFO
       LOGGING_LEVEL_COM_EXAMPLE_DISTRIBUTEDNEWSBACKEND: DEBUG
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - springlogs:/var/log/spring
     restart: unless-stopped
