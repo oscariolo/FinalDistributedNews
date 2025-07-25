@@ -1,5 +1,7 @@
 package com.example.distributednewsbackend.auth;
 
+import com.example.distributednewsbackend.model.Topic;
+
 import jakarta.persistence.ElementCollection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +25,6 @@ public class RegisterRequest {
   private String password;
 
   @ElementCollection
-  private java.util.List<String> subs;
+  private java.util.Set<Topic> subs;
   
 }
