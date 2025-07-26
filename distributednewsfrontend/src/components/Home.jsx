@@ -11,27 +11,27 @@ const Home = () => {
     // Usar fullName si existe, sino usar username, sino "Usuario"
     const displayName = fullName || username || "Usuario";
 
-    // Datos simulados de noticias
-    const [noticias] = useState([
-        {
-            id: 1,
-            titulo: "Breakthrough en Inteligencia Artificial",
-            descripcion: "Un nuevo modelo de AI revoluciona el procesamiento de lenguaje natural...",
-            fecha: "2025-01-15"
-        },
-        {
-            id: 2,
-            titulo: "Descubrimiento en Medicina",
-            descripcion: "Científicos desarrollan una nueva terapia génica...",
-            fecha: "2025-01-14"
-        },
-        {
-            id: 3,
-            titulo: "Avances en Tecnología Verde",
-            descripcion: "Nueva tecnología de paneles solares aumenta eficiencia...",
-            fecha: "2025-01-13"
-        }
-    ]);
+    // // Datos simulados de noticias
+    // const [noticias] = useState([
+    //     {
+    //         id: 1,
+    //         titulo: "Breakthrough en Inteligencia Artificial",
+    //         descripcion: "Un nuevo modelo de AI revoluciona el procesamiento de lenguaje natural...",
+    //         fecha: "2025-01-15"
+    //     },
+    //     {
+    //         id: 2,
+    //         titulo: "Descubrimiento en Medicina",
+    //         descripcion: "Científicos desarrollan una nueva terapia génica...",
+    //         fecha: "2025-01-14"
+    //     },
+    //     {
+    //         id: 3,
+    //         titulo: "Avances en Tecnología Verde",
+    //         descripcion: "Nueva tecnología de paneles solares aumenta eficiencia...",
+    //         fecha: "2025-01-13"
+    //     }
+    // ]);
 
     const [suscripcionesActivas, setSuscripcionesActivas] = useState(0);
     const [loading, setLoading] = useState(true);
