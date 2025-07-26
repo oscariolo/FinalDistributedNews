@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.example.distributednewsbackend.services.JwtAuthenticationFilter;
 
-import jakarta.servlet.http.HttpServletResponse;
+// import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -28,7 +28,7 @@ public class SecurityConfig {
     return http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/auth/**", "/api/users/me").permitAll()
             .anyRequest().authenticated())
         // .formLogin(form -> form.disable()) 
         // .httpBasic(basic -> basic.disable()) 

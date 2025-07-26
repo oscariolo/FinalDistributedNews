@@ -2,6 +2,8 @@ package com.example.distributednewsbackend.controller;
 
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.distributednewsbackend.dto.UserDto;
 import com.example.distributednewsbackend.model.User;
 import com.example.distributednewsbackend.repository.UserRepository;
+
 
 
 @RestController
@@ -44,4 +48,16 @@ public class UserController {
   public User addOneUser(@RequestBody User user){
     return this.userRepository.save(user);
   }
+
+  @GetMapping("/users/me")
+  public ResponseEntity<UserDto> getCurrentUser (@AuthenticationPrincipal User user) {
+      UserDto dto = new UserDto(
+        user.getUsername(),
+        user.getName(),
+        user.getEmail(),
+        user.getBirthday()
+    );
+    return ResponseEntity.ok(dto);
+  }
+  
 }
