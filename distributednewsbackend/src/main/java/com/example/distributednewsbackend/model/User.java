@@ -66,11 +66,4 @@ public class User implements UserDetails {
     return List.of(new SimpleGrantedAuthority(role.name()));
   }
 
-  public User(String username, String name, String email, Set<Topic> subs, String birthday) {
-    this.name = name;
-    this.username = username;
-    this.email = email;
-    this.subs = subs;
-    this.birthday = birthday;
-  }
 }

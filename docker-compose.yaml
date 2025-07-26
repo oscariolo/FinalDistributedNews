@@ -10,9 +10,9 @@ services:
     restart: unless-stopped
     depends_on:
       - zilla1
-      # - zilla2
+      - zilla2
       - backend1
-      # - backend2
+      - backend2
 
   kafka:
     image: apache/kafka:3.8.0
@@ -37,7 +37,7 @@ services:
     pull_policy: always
     depends_on:
       - kafka
-      # - fluent-bit
+      - fluent-bit
     ports:
       - "7115:7114"
     environment:
@@ -46,31 +46,31 @@ services:
       - ./configs/zilla.yaml:/etc/zilla/zilla.yaml
     command: start -v -e
     restart: unless-stopped
-    # logging:
-    #   driver: "fluentd"
-    #   options:
-    #     fluentd-address: localhost:24224
-    #     tag: docker.zilla1
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: docker.zilla1
 
-  # zilla2:
-  #   image: ghcr.io/aklivity/zilla:latest
-  #   pull_policy: always
-  #   depends_on:
-  #     - kafka
-  #     - fluent-bit
-  #   ports:
-  #     - "7116:7114"
-  #   environment:
-  #     KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
-  #   volumes:
-  #     - ./configs/zilla.yaml:/etc/zilla/zilla.yaml
-  #   command: start -v -e
-  #   restart: unless-stopped
-  #   logging:
-  #     driver: "fluentd"
-  #     options:
-  #       fluentd-address: localhost:24224
-  #       tag: docker.zilla2
+  zilla2:
+    image: ghcr.io/aklivity/zilla:latest
+    pull_policy: always
+    depends_on:
+      - kafka
+      - fluent-bit
+    ports:
+      - "7116:7114"
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
+    volumes:
+      - ./configs/zilla.yaml:/etc/zilla/zilla.yaml
+    command: start -v -e
+    restart: unless-stopped
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: docker.zilla2
 
   backend1:
     build: ./distributednewsbackend
@@ -97,30 +97,30 @@ services:
       - springlogs:/var/log/spring
     restart: unless-stopped
 
-  # backend2:
-  #   build: ./distributednewsbackend
-  #   ports:
-  #     - "8082:8080"
-  #   depends_on:
-  #     - kafka
-  #     # - ollama
-  #   environment:
-  #     KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-  #     # OLLAMA_MODEL: llama2
-  #     # SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
-  #     SERVER_PORT: 8080
-  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/newsdb
-  #     SPRING_DATASOURCE_USERNAME: admin
-  #     SPRING_DATASOURCE_PASSWORD: news1234
-  #     SPRING_JPA_HIBERNATE_DDL_AUTO: update
-  #     SERVER_INSTANCE: backend2
-  #     LOGGING_FILE_NAME: /var/log/spring/backend2.log
-  #     LOGGING_LEVEL_ROOT: INFO
-  #     LOGGING_LEVEL_COM_EXAMPLE_DISTRIBUTEDNEWSBACKEND: DEBUG
-  #     JWT_SECRET: ${JWT_SECRET}
-  #   volumes:
-  #     - springlogs:/var/log/spring
-  #   restart: unless-stopped
+  backend2:
+    build: ./distributednewsbackend
+    ports:
+      - "8082:8080"
+    depends_on:
+      - kafka
+      # - ollama
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # OLLAMA_MODEL: llama2
+      # SPRING_AI_OLLAMA_BASE_URL: http://ollama:11434
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/newsdb
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: news1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_INSTANCE: backend2
+      LOGGING_FILE_NAME: /var/log/spring/backend2.log
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_EXAMPLE_DISTRIBUTEDNEWSBACKEND: DEBUG
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - springlogs:/var/log/spring
+    restart: unless-stopped
 
   frontend1:
     build: ./distributednewsfrontend
@@ -128,11 +128,11 @@ services:
       - "3001:80"
     restart: unless-stopped
 
-  # frontend2:
-  #   build: ./distributednewsfrontend
-  #   ports:
-  #     - "3002:80"
-  #   restart: unless-stopped
+  frontend2:
+    build: ./distributednewsfrontend
+    ports:
+      - "3002:80"
+    restart: unless-stopped
 
   postgres:
     image: postgres:15-alpine
@@ -157,53 +157,53 @@ services:
   #     OLLAMA_MODEL: llama2
   #   restart: unless-stopped
 
-  # fluent-bit:
-  #   image: grafana/fluent-bit-plugin-loki:latest
-  #   ports:
-  #     - "24224:24224"
-  #   volumes:
-  #     - springlogs:/var/log/spring:ro
-  #     - fluentlogs:/var/log/fluent-bit
-  #     - ./configs/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
-  #     - ./configs/etc/add_service.lua:/fluent-bit/etc/add_service.lua:ro
-  #   depends_on:
-  #     - loki
-  #   command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
-  #   restart: unless-stopped
+  fluent-bit:
+    image: grafana/fluent-bit-plugin-loki:latest
+    ports:
+      - "24224:24224"
+    volumes:
+      - springlogs:/var/log/spring:ro
+      - fluentlogs:/var/log/fluent-bit
+      - ./configs/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./configs/etc/add_service.lua:/fluent-bit/etc/add_service.lua:ro
+    depends_on:
+      - loki
+    command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
+    restart: unless-stopped
 
-  # loki:
-  #   image: grafana/loki:latest
-  #   ports:
-  #     - "3100:3100"
-  #   restart: unless-stopped
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   ports:
-  #     - "3400:3000"
-  #   environment:
-  #     - GF_SECURITY_ADMIN_PASSWORD=admin123
-  #   volumes:
-  #     - ./configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
-  #   depends_on:
-  #     - loki
-  #   restart: unless-stopped
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3400:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - ./configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
 
-  # news-generator:
-  #   image: confluentinc/cp-kafkacat:7.1.9
-  #   command:
-  #     - /bin/sh
-  #     - -c
-  #     - |
-  #       while true; do 
-  #         echo '{"title": "Breaking News", "content": "News at '$(date)'", "category": "general"}' | kafkacat -P -b kafka:29092 -t news-general -k "news-$(date +%s)"
-  #         echo "News sent, waiting 10 seconds..."
-  #         sleep 10
-  #       done
-  #   depends_on:
-  #     - kafka
-  #   profiles:
-  #     - testing
+  news-generator:
+    image: confluentinc/cp-kafkacat:7.1.9
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true; do 
+          echo '{"title": "Breaking News", "content": "News at '$(date)'", "category": "general"}' | kafkacat -P -b kafka:29092 -t news-general -k "news-$(date +%s)"
+          echo "News sent, waiting 10 seconds..."
+          sleep 10
+        done
+    depends_on:
+      - kafka
+    profiles:
+      - testing
 
 volumes:
   news-database:

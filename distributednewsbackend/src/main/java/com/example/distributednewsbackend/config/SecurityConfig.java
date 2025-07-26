@@ -31,6 +31,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/topics").permitAll()
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .anyRequest().authenticated())
         // .formLogin(form -> form.disable()) 
         // .httpBasic(basic -> basic.disable()) 

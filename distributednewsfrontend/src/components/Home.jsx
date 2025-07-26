@@ -6,7 +6,8 @@ const Home = () => {
     // Obtener datos del usuario del localStorage
     const fullName = localStorage.getItem('fullName') || '';
     const username = localStorage.getItem('username') || '';
-    
+    const token = localStorage.getItem('authToken');
+
     // Usar fullName si existe, sino usar username, sino "Usuario"
     const displayName = fullName || username || "Usuario";
 
@@ -32,27 +33,68 @@ const Home = () => {
         }
     ]);
 
-    const suscripcionesActivas = 5; // Esto vendría del backend
+    const [suscripcionesActivas, setSuscripcionesActivas] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const fetchSubs = async () => {
+            try {
+                // Obtener datos del usuario
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/username/${username}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const json = await response.json();
+                setSuscripcionesActivas(json.subs.length);
+                setLoading(false);
+
+            } catch (error) {
+                console.log(error);
+                setLoading(false);
+                setError(true);
+            }
+        }
+
+        fetchSubs();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <p className="text-lg text-gray-600">Cargando ...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <p className="text-lg text-gray-600">Something gone wrong!!. Please contact with an administrator. </p>
+            </div>
+        );
+    }
 
     return (
         <div>
-            <Navbar/>
+            <Navbar />
             <div className="container mx-auto p-8">
                 {/* Saludos y estadísticas */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold mb-2">¡Bienvenido, {displayName}!</h1>
                     <div className="flex gap-8 text-lg">
                         <span>
-                            <span className="font-semibold">{noticias.length}</span> noticias nuevas	
+                            <span className="font-semibold">{noticias.length}</span> noticias nuevas
                         </span>
                         <span>
                             <span className="font-semibold">{suscripcionesActivas}</span> suscripciones activas
                         </span>
                     </div>
                 </div>
-                
+
                 {/* Noticias recientes */}
-                <div>
+                {/* <div>
                     <h2 className="text-xl font-bold mb-4">Noticias Recientes</h2>
                     {noticias.length === 0 ? (
                         <div>No hay noticias nuevas.</div>
@@ -61,7 +103,7 @@ const Home = () => {
                             <NewsCard key={noticia.id} noticia={noticia} />
                         ))
                     )}
-                </div>
+                </div> */}
             </div>
         </div>
     );
