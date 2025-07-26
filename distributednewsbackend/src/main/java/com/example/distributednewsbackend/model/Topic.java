@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -16,6 +17,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Setter
 @Getter
+@NoArgsConstructor
 
 public class Topic {
   @Id
@@ -26,8 +28,9 @@ public class Topic {
   @Column(nullable = false)
   private String topicName;
 
-  public Topic(){
-  
+  // Constructor que acepta solo topicName (para cuando la DB genera el ID)
+  public Topic(String topicName) {
+      this.topicName = topicName;
   }
 }
 

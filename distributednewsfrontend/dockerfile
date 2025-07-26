@@ -1,6 +1,14 @@
 # Etapa 1: Construcción
 FROM node:20-alpine AS builder
 
+# Define los build arguments
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_API_URL
+
+# Define variables de entorno con esos args
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Crea directorio de trabajo
 WORKDIR /app
 
@@ -13,7 +21,7 @@ RUN npm install
 # Copia el resto del código
 COPY . .
 
-# Genera build de producción
+# Genera build de producción con las variables de entorno ya definidas
 RUN npm run build
 
 # Etapa 2: Servir con Nginx

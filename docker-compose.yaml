@@ -8,11 +8,6 @@ services:
     volumes:
       - ./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
-    depends_on:
-      - zilla1
-      - zilla2
-      - backend1
-      - backend2
 
   kafka:
     image: apache/kafka:3.8.0
@@ -78,6 +73,7 @@ services:
       - "8081:8080"
     depends_on:
       - kafka
+      - postgres
       # - ollama
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -103,6 +99,7 @@ services:
       - "8082:8080"
     depends_on:
       - kafka
+      - postgres
       # - ollama
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -123,15 +120,33 @@ services:
     restart: unless-stopped
 
   frontend1:
-    build: ./distributednewsfrontend
+    build:
+      context: ./distributednewsfrontend
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+        VITE_API_URL: ${VITE_API_URL}
     ports:
       - "3001:80"
+    depends_on:
+      - backend1
+      - backend2
+      - zilla1
+      - zilla2
     restart: unless-stopped
 
   frontend2:
-    build: ./distributednewsfrontend
+    build:
+      context: ./distributednewsfrontend
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+        VITE_API_URL: ${VITE_API_URL}
     ports:
       - "3002:80"
+    depends_on:
+      - backend1
+      - backend2
+      - zilla1
+      - zilla2
     restart: unless-stopped
 
   postgres:
