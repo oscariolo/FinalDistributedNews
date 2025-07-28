@@ -1,29 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef,  useCallback } from "react";
 import NewsCard from "./NewsCard";
 import Navbar from "./Navbar";
-
-// Hook para recibir noticias en tiempo real
-const useSSENoticias = (topicoId, onNewNoticia) => {
-  useEffect(() => {
-    if (!topicoId) return;
-
-    const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/news/stream/${topicoId}`);
-
-    eventSource.onmessage = (event) => {
-      const noticia = JSON.parse(event.data);
-      onNewNoticia(noticia);
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("Error en SSE:", error);
-      eventSource.close();
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [topicoId, onNewNoticia]);
-};
 
 const SidebarSuscripciones = ({
   topicos,
@@ -62,8 +39,8 @@ const SidebarSuscripciones = ({
             <li
               key={topico.id}
               className={`cursor-pointer p-2 rounded mb-2 flex justify-between items-center group ${seleccionado === topico.id
-                  ? "bg-blue-100 font-semibold"
-                  : "hover:bg-gray-100"
+                ? "bg-blue-100 font-semibold"
+                : "hover:bg-gray-100"
                 }`}
               onClick={() => setSeleccionado(topico.id)}
             >
@@ -120,8 +97,6 @@ const NoticiasSuscripcion = ({ noticias, topicoSeleccionado, topicos }) => {
   );
 };
 
-
-
 const Suscripciones = () => {
   const [topicosSuscritos, setTopicosSuscritos] = useState([]);
   const [topicoSeleccionado, setTopicoSeleccionado] = useState(null);
@@ -135,14 +110,11 @@ const Suscripciones = () => {
   useEffect(() => {
     const fetchSubs = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/users/username/${username}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/username/${username}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const data = await res.json();
         const subs = (data.subs || []).map((s) => ({
           id: s.id,
@@ -159,35 +131,65 @@ const Suscripciones = () => {
     fetchSubs();
   }, []);
 
-  console.log(topicoSeleccionado)
+  // Función de escucha: solo se activa si hay suscripciones cargadas
+  const handleNuevaNoticia = useCallback((nuevaNoticia) => {
+    console.log("✅ SSE llegó:", nuevaNoticia);
 
-  // // ✅ Escuchar noticias en tiempo real por SSE
-  // useSSENoticias(topicoSeleccionado, (nuevaNoticia) => {
-  //   if (!nuevaNoticia || !nuevaNoticia.id || !topicoSeleccionado) return;
+    if (!nuevaNoticia || topicosSuscritos.length === 0) return;
 
-  //   setNoticiasPorTopico((prev) => {
-  //     const noticiasActuales = prev[topicoSeleccionado] || [];
-  //     const yaExiste = noticiasActuales.some((n) => n.id === nuevaNoticia.id);
-  //     if (yaExiste) return prev;
+    console.log("paso return")
 
-  //     return {
-  //       ...prev,
-  //       [topicoSeleccionado]: [...noticiasActuales, nuevaNoticia],
-  //     };
-  //   });
-  // });
+    // Ignorar si no está suscrito
+    const topico = topicosSuscritos.find((t) => t.nombre.toLowerCase() === nuevaNoticia.topic.toLowerCase());
+    if (!topico) return;
+
+    console.log("return 2 ")
+
+    const topicoId = topico.id;
+
+    setNoticiasPorTopico((prev) => {
+      const noticiasActuales = prev[topicoId] || [];
+      const yaExiste = noticiasActuales.some((n) => n.title === nuevaNoticia.title);
+      if (yaExiste) return prev;
+
+      return {
+        ...prev,
+        [topicoId]: [nuevaNoticia, ...noticiasActuales],
+      };
+    });
+  }, [topicosSuscritos]);
+
+   // Montar SSE solo cuando haya suscripciones cargadas
+  useEffect(() => {
+    if (topicosSuscritos.length === 0) return;
+
+    const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/news-stream`);
+    eventSource.onmessage = (event) => {
+      try {
+        const noticia = JSON.parse(event.data);
+        handleNuevaNoticia(noticia);
+      } catch (e) {
+        console.error("[SSE] Error al parsear:", event.data);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("[SSE] Error de conexión:", err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [topicosSuscritos, handleNuevaNoticia]);
 
   const handleDesuscribirse = async (topicoId) => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/users/${username}/unsubscribe/${topicoId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/topic/${topicoId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (res.ok) {
         const nuevas = topicosSuscritos.filter((t) => t.id !== topicoId);
@@ -225,6 +227,5 @@ const Suscripciones = () => {
     </div>
   );
 };
-
 
 export default Suscripciones;

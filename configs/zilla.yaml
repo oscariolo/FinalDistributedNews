@@ -14,6 +14,13 @@ bindings:
     options:
       access-control:
         policy: cross-origin
+        allow:
+          origin:
+            - "*"
+          methods:
+            - GET
+          headers:
+            - "*"
     routes:
       - when:
           - headers:
@@ -31,6 +38,8 @@ bindings:
   north_sse_server:
     type: sse
     kind: server
+    options:
+      keepalive: 30s
     exit: north_sse_kafka_mapping
 
   # SSE to Kafka mapping  

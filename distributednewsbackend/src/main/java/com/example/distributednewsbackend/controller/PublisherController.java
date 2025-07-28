@@ -40,7 +40,7 @@ public class PublisherController {
             String message = String.format("""
             {
                 "title": "%s",
-                "desc": "%s",
+                "description": "%s",
                 "lead": "%s",
                 "author": "%s",
                 "topic": "%s",
