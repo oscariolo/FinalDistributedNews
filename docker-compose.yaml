@@ -1,14 +1,5 @@
-services:
-  haproxy:
-    image: haproxy:latest
-    ports:
-      - "443:443"
-      - "8080:8080"
-      - "8404:8404"
-    volumes:
-      - ./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    restart: unless-stopped
 
+services:
   kafka:
     image: apache/kafka:3.8.0
     ports:
